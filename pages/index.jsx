@@ -133,6 +133,8 @@ export default function Home() {
         setAutoScroll(true)
       }, 10)
 
+      setInputContent("")
+
       streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x) => {
         setCurrentChat((prevChat) => {
           const updatedChat = [...prevChat];
