@@ -153,9 +153,10 @@ export default function Home() {
             return
         }
 
-        router.push("/?id="+ChatHistoryQueryResults[selectedItem].id)
+        localStorage.setItem("readerId", "")
         setChatId(ChatHistoryQueryResults[selectedItem].id)
         ChatHistoryModalOnClose()
+        router.push("/?id="+ChatHistoryQueryResults[selectedItem].id)
     }
   }
 
@@ -187,8 +188,11 @@ export default function Home() {
 
       setInputContent("")
 
-      streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x, i) => {
+      streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x, id) => {
         setCurrentChat((prevChat) => {
+          if (window.localStorage.getItem("readerId")!=id) {
+            return prevChat
+          }
           const updatedChat = [...prevChat];
           const lastMessage = { ...updatedChat[updatedChat.length - 1] };
           const lastPart = { ...lastMessage.parts[0] };
@@ -263,10 +267,11 @@ export default function Home() {
 
   var commands = {
     "New Chat - Creates a new chat": () => {
-        router.push("/")
         setCurrentChat([])
         setChatId(null)
         ChatHistoryModalOnClose()
+        localStorage.setItem("readerId", "")
+        router.push("/")
         return
     }
   }

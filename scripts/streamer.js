@@ -35,10 +35,6 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
             });
     }
     while (true) {
-        if (window.localStorage.getItem("readerId")!=id) {
-            reader.cancel("User stopped the action")
-            return
-        }
         const { done, value } = await reader.read();
         if (done) break;
     
@@ -53,7 +49,12 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
                 var splittedText = splitByNewlineAndEveryN(text)
                 for (let index = 0; index < splittedText.length; index++) {
                     const element = splittedText[index];
-                    onUpdate(element)
+                    if (window.localStorage.getItem("readerId")!=id) {
+                        console.log(window.localStorage.getItem("readerId"), id)
+                        reader.cancel("User stopped the action")
+                        return
+                    }
+                    onUpdate(element, Number(id))
                 }
             }
         }
