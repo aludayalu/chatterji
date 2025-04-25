@@ -1,9 +1,9 @@
-const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:streamGenerateContent?alt=sse&key="
+const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key="
 
 export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
     var id=Math.random().toString()
     window.localStorage.setItem("readerId", id)
-    const response = await fetch(endpoint + window.localStorage.getItem("geminiAPIKey"), {
+    const response = await fetch(endpoint.replace("{model}", localStorage.getItem("usingPro") == "true" ? "gemini-2.5-pro-exp-03-25" : "gemini-2.5-flash-preview-04-17") + window.localStorage.getItem("geminiAPIKey"), {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
