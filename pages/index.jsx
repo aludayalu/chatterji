@@ -139,7 +139,7 @@ export default function Home() {
         setSelectedItem(selectedItem + 1)
     }
     if (event.key == "Enter") {
-        event.preventDefault();
+        try {event.preventDefault()} catch{}
 
         if (selectedItem == null) {
             return;
@@ -220,7 +220,7 @@ export default function Home() {
     }
   }
 
-  const [selectedItem, setSelectedItem] = useState(null)
+  var [selectedItem, setSelectedItem] = useState(null)
 
   const [ChatHistoryQueryResults, setChatHistoryQueryResults] = useState([])
 
@@ -263,10 +263,9 @@ export default function Home() {
 
   var commands = {
     "New Chat - Creates a new chat": () => {
-        var id = generateUnsafeUUID()
-        router.push("/?id="+id)
+        router.push("/")
         setCurrentChat([])
-        setChatId(id)
+        setChatId(null)
         ChatHistoryModalOnClose()
         return
     }
@@ -448,14 +447,13 @@ export default function Home() {
                     ></textarea>
                     {ChatHistoryQueryResults.map((x, i) =>
                         <>
-                        <div id={"chatid_"+x.id} style={{width: queryInputCurrentWidth, backgroundColor: selectedItem == i ? "#222" : "#111", padding: "8px", borderBottomRightRadius: i == ChatHistoryQueryResults.length - 1 ? "10px" : "", borderBottomLeftRadius: i == ChatHistoryQueryResults.length - 1 ? "10px" : "", cursor: "pointer"}}
+                        <div id={"selection_"+i} style={{width: queryInputCurrentWidth, backgroundColor: selectedItem == i ? "#222" : "#111", padding: "8px", borderBottomRightRadius: i == ChatHistoryQueryResults.length - 1 ? "10px" : "", borderBottomLeftRadius: i == ChatHistoryQueryResults.length - 1 ? "10px" : "", cursor: "pointer"}}
                             onClick={(event) => {
                                 if (event.target.id == "") {
                                     event.target = event.target.parentElement
                                 }
-                                router.push("/?id="+event.target.id.split("chatid_")[1])
-                                setChatId(event.target.id.split("chatid_")[1])
-                                ChatHistoryModalOnClose()
+                                selectedItem = Number(event.target.id.split("selection_")[1])
+                                ChatHistoryKeyboardHandler({"key": "Enter"})
                             }}
                         >
                             <h1 style={{overflow: "hidden", "whiteSpace": "nowrap", "textOverflow": "ellipsis", display: "block"}}>{x.title.replace(/\n/g, ' ')}</h1>
