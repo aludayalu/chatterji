@@ -25,9 +25,19 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
     
     const reader = response.body.getReader();
     const decoder = new TextDecoder('utf-8');
+
+    function splitByNewlineAndEveryN(str) {
+        return str
+            .split(/(\n)/) // Split by newline and keep it as a token
+            .flatMap(part => {
+                if (part === '\n') return [part];
+                return part.match(/.{1,50}/g) || [''];
+            });
+    }
     
     while (true) {
         if (window.localStorage.getItem("readerId")!=id) {
+            reader.cancel("User stopped the action")
             return
         }
         const { done, value } = await reader.read();
@@ -41,7 +51,11 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
             const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
 
             if (text) {
-                onUpdate(text)
+                var splittedText = splitByNewlineAndEveryN(text)
+                for (let index = 0; index < splittedText.length; index++) {
+                    const element = splittedText[index];
+                    onUpdate(element)
+                }
             }
         }
     }

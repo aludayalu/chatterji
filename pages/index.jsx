@@ -1,6 +1,6 @@
 import { Button, Modal, useDisclosure, ModalContent, ModalHeader, ModalBody, Input, ModalFooter, Checkbox } from "@heroui/react";
-import { CircleStop, CircleArrowUp } from "lucide-react"
-import { useEffect, useState } from "react";
+import { CircleStop, CircleArrowUp, ArrowDown } from "lucide-react"
+import { useEffect, useState, useRef } from "react";
 import { streamGeminiResponse } from "../scripts/streamer"
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -45,7 +45,6 @@ const ModelMessage = MarkdownComponent
 
 export default function Home() {
   const [inputContent, setInputContent] = useState("")
-  const [isGenerating, setIsGenerating] = useState(false)
   const [currentChat, setCurrentChat] = useState([])
   const [chatId, setChatId] = useState(null)
   const {isOpen, onOpen, onOpenChange} = useDisclosure()
@@ -62,49 +61,77 @@ export default function Home() {
   } catch {}
   const [usingPro, setIsUsingPro] = useState(proDefault)
 
+  const chatboxRef = useRef(null);
+  const [autoScroll, setAutoScroll] = useState(true);
+
   useEffect(() => {
-    function KeyboardListener(event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        if (window.localStorage.getItem("geminiAPIKey") == null) {
-          onOpen()
-          return
-        }
-
-        setCurrentChat((currentChat) => [...currentChat, {role: "user", parts: [{ text: inputContent}]}, {role: "model", parts: [{ text: ""}]}])
-
-        setIsResponding(true)
-
-        streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x) => {
-          setCurrentChat((prevChat) => {
-            const updatedChat = [...prevChat];
-            const lastMessage = { ...updatedChat[updatedChat.length - 1] };
-            const lastPart = { ...lastMessage.parts[0] };
-          
-            lastPart.text += x;
-            lastMessage.parts = [lastPart];
-            updatedChat[updatedChat.length - 1] = lastMessage;
-          
-            return updatedChat;
-          });          
-        }, () => {console.log("Ended")})
-        event.preventDefault();
-      }
-
-      if (event.code === "Space" && event.altKey) {
-        event.preventDefault();
-      }
+    const el = chatboxRef.current;
+    if (autoScroll && el) {
+      el.scrollTo({ top: el.scrollHeight, behavior: "auto" });
     }
+  }, [currentChat, autoScroll]);
+
+  function KeyboardListener(event) {
+    if (event.key === "Enter" && !event.shiftKey) {
+      if (window.localStorage.getItem("geminiAPIKey") == null) {
+        onOpen()
+        return
+      }
+
+      setCurrentChat((currentChat) => [...currentChat, {role: "user", parts: [{ text: inputContent}]}, {role: "model", parts: [{ text: ""}]}])
+
+      setIsResponding(true)
+
+      setTimeout(() => {
+        setAutoScroll(true)
+      }, 10)
+
+      streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x) => {
+        setCurrentChat((prevChat) => {
+          const updatedChat = [...prevChat];
+          const lastMessage = { ...updatedChat[updatedChat.length - 1] };
+          const lastPart = { ...lastMessage.parts[0] };
+        
+          lastPart.text += x;
+          lastMessage.parts = [lastPart];
+          updatedChat[updatedChat.length - 1] = lastMessage;
+        
+          return updatedChat;
+        });
+      }, () => {
+        setIsResponding(false)
+      })
+      try {event.preventDefault()} catch{}
+    }
+
+    if (event.code === "Space" && event.altKey) {
+      event.preventDefault();
+    }
+  }
+
+  useEffect(() => {
 
     document.addEventListener("keydown", KeyboardListener)
 
     return () => {document.removeEventListener("keydown", KeyboardListener)}
   }, [inputContent])
+  const prevScrollTop = useRef(0);
   return (
     <>
-    <div style={{minHeight:"100vh", width:"100vw", backgroundColor:"#111", overflowY: "auto"}}>
+    <div style={{minHeight:"100vh", width:"100vw", backgroundColor:"#111", overflowY: "auto"}} ref={chatboxRef} onScroll={(e) => {
+      if (!isResponding) {
+        return
+      }
+      const curr = e.target.scrollTop;
+      if (curr < prevScrollTop.current) {
+        console.log("scrolled up")
+        setAutoScroll(false);
+      }
+      prevScrollTop.current = curr;
+    }}>
       <div style={{height:"76vh", "width":"100%"}}>
         <div style={{height:"100%", width:"100%"}} className="flex justify-center items-center">
-          <div style={{height:"100%", width:"60%", marginTop:"50px"}} id="chatbox">
+          <div style={{height:"100%", width:"60%", marginTop:"50px"}}>
             {currentChat.map((item) => {
               if (item.role == "user") {
                 return UserMessage(item.parts[0].text)
@@ -117,6 +144,16 @@ export default function Home() {
           </div>
         </div>
       </div>
+      {!autoScroll && <div style={{position:"absolute", bottom:"26vh", width:"100vw"}} className="flex justify-center items-center">
+        <Button style={{backgroundColor:"rgb(28, 28, 28)", border:"1px solid rgba(255, 255, 255, 0.14)"}} isIconOnly
+          onPress={() => {
+            const el = chatboxRef.current;
+            const here = el.scrollTop;
+            el.scrollTo({ top: here, behavior: "instant" });
+            setAutoScroll(true)
+          }}
+        ><ArrowDown></ArrowDown></Button>
+      </div>}
       <div style={{height:"24vh", "width":"100%", position: "fixed"}} className="flex justify-center items-center">
         <div className="flex flex-col" style={{height:"100%", width:"50%", border:"1px solid rgba(255, 255, 255, 0.14)", borderBottom: "none", borderTopLeftRadius:"14px", borderTopRightRadius:"14px", background:"#1c1c1c"}}>
           <div style={{height:"auto", padding:"8px"}} className="flex-1">
@@ -125,18 +162,28 @@ export default function Home() {
                 setInputContent(x.target.value)
               }}
               value={inputContent}
+              placeholder="Write your message here"
             >
 
             </textarea>
           </div>
           <div style={{height:"auto"}}>
-            <div style={{float:"right", marginRight:"10px", marginBottom:"10px", cursor: "pointer"}} className="flex justify-center items-center">
+            <div style={{float:"right", marginRight:"10px", marginBottom:"10px", cursor: "pointer"}} className="flex justify-center items-center"
+              onClick={() => {
+                if (isResponding) {
+                  localStorage.setItem("readerId", "")
+                  setIsResponding(false)
+                } else {
+                  KeyboardListener({"key": "Enter", "shiftKey": false})
+                }
+              }}
+            >
               <Button variant="faded" size="sm" style={{marginRight:"10px"}} onPress={onOpen}>Change API Key</Button>
               {
-                !isGenerating && <CircleArrowUp opacity={inputContent.length == 0 ? 0.2 : 1} size={28} />
+                !isResponding && <CircleArrowUp opacity={inputContent.length == 0 ? 0.2 : 1} size={28} />
               }
               {
-                isGenerating && <CircleStop size={28}></CircleStop>
+                isResponding && <CircleStop size={28}></CircleStop>
               }
             </div>
           </div>
