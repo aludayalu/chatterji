@@ -10,7 +10,7 @@ export default function Document() {
       <title>Chatterji</title>
       <body
         className={clsx(
-          "min-h-screen bg-background font-sans antialiased",
+          "dark min-h-screen bg-background font-sans antialiased",
           fontSans.variable,
         )}
       >
