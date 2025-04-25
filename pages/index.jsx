@@ -1,4 +1,4 @@
-import { Button, Modal, useDisclosure, ModalContent, ModalHeader, ModalBody, Input, ModalFooter, Checkbox } from "@heroui/react";
+import { Button, Modal, useDisclosure, ModalContent, ModalHeader, ModalBody, Input, ModalFooter, Checkbox, Tooltip } from "@heroui/react";
 import { CircleStop, CircleArrowUp, ArrowDown } from "lucide-react"
 import { useEffect, useState, useRef } from "react";
 import { streamGeminiResponse } from "../scripts/streamer"
@@ -25,20 +25,29 @@ const MarkdownComponent = (content) => {
   )
 }
 
-const UserMessage = (content) => {
+const UserMessage = (content, i, setInputContent, currentChat, setCurrentChat) => {
   return (
     <>
     <div style={{ display: "flex", justifyContent: "flex-end" }}>
-      <div style={{
-        width: "fit-content",
-        border: "1px solid rgba(255, 255, 255, 0.14)",
-        padding: "8px",
-        borderRadius: "5px",
-        backgroundColor: "#1c1c1c",
-        marginBottom: "14px"
-      }}>
-        {content}
-      </div>
+      <Tooltip placement="bottom-end" showArrow content={(
+        <>
+        <h1 style={{cursor: "pointer"}} onClick={() => {
+            setInputContent(content)
+            setCurrentChat(currentChat.slice(0, i))
+        }}>Edit</h1>
+        </>
+      )}>
+        <div style={{
+            width: "fit-content",
+            border: "1px solid rgba(255, 255, 255, 0.14)",
+            padding: "8px",
+            borderRadius: "5px",
+            backgroundColor: "#1c1c1c",
+            marginBottom: "14px"
+        }}>
+            {content}
+        </div>
+      </Tooltip>
     </div>
     </>
   )
@@ -52,6 +61,7 @@ export default function Home() {
   const [currentChat, setCurrentChat] = useState([])
   var [chatId, setChatId] = useState(null)
   const {isOpen, onOpen, onOpenChange} = useDisclosure()
+  const {isOpen: ChatHistoryModalIsOpen, onOpen: ChatHistoryModalOnOpen, onOpenChange: ChatHistoryModalOnOpenChange, onClose: ChatHistoryModalOnClose} = useDisclosure()
   var KeyStateDefault = ""
   try {
     KeyStateDefault = eval("localStorage")?.getItem("geminiAPIKey")
@@ -113,7 +123,47 @@ export default function Home() {
     return chatId
   }
 
+  function ChatHistoryKeyboardHandler(event) {
+    if (event.key == "ArrowUp") {
+        if (selectedItem == null || selectedItem == 0) return;
+        setSelectedItem(selectedItem - 1)
+    }
+    if (event.key == "ArrowDown") {
+        if (selectedItem == null) {
+            setSelectedItem(0)
+            return
+        }
+        if (selectedItem == ChatHistoryQueryResults.length - 1) {
+            return
+        }
+        setSelectedItem(selectedItem + 1)
+    }
+    if (event.key == "Enter") {
+        event.preventDefault();
+
+        if (selectedItem == null) {
+            return;
+        }
+
+        setSelectedItem(null)
+        setChatHistoryInputText("")
+
+        if (ChatHistoryQueryResults[selectedItem].date == "Command") {
+            commands[ChatHistoryQueryResults[selectedItem].title]()
+            return
+        }
+
+        router.push("/?id="+ChatHistoryQueryResults[selectedItem].id)
+        setChatId(ChatHistoryQueryResults[selectedItem].id)
+        ChatHistoryModalOnClose()
+    }
+  }
+
   function KeyboardListener(event) {
+    if (ChatHistoryModalIsOpen) {
+        ChatHistoryKeyboardHandler(event)
+        return
+    }
     if (event.key === "Enter" && !event.shiftKey) {
       if (window.localStorage.getItem("geminiAPIKey") == null || inputContent == "") {
         onOpen()
@@ -125,6 +175,7 @@ export default function Home() {
       setCurrentChat((currentChat) => {
         var newChat = [...currentChat, {role: "user", parts: [{ text: inputContent}]}, {role: "model", parts: [{ text: ""}]}]
         window.localStorage.setItem(chatId, JSON.stringify(newChat))
+        window.localStorage.setItem(chatId+"date", parseInt(Number(new Date()) / 1000).toString())
         return newChat
       })
 
@@ -136,7 +187,7 @@ export default function Home() {
 
       setInputContent("")
 
-      streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x) => {
+      streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x, i) => {
         setCurrentChat((prevChat) => {
           const updatedChat = [...prevChat];
           const lastMessage = { ...updatedChat[updatedChat.length - 1] };
@@ -147,7 +198,9 @@ export default function Home() {
           updatedChat[updatedChat.length - 1] = lastMessage;
 
           window.localStorage.setItem(chatId, JSON.stringify(updatedChat))
-        
+
+          window.localStorage.setItem(chatId+"date", parseInt(Number(new Date()) / 1000).toString())
+
           return updatedChat;
         });
       }, () => {
@@ -156,8 +209,9 @@ export default function Home() {
       try {event.preventDefault()} catch{}
     }
 
-    if (event.code === "Space" && event.altKey) {
-      event.preventDefault();
+    if (event.code === "Space" && (event.altKey || event.shiftKey)) {
+        ChatHistoryModalOnOpen()
+        event.preventDefault();
     }
 
     if (event.code == "Escape") {
@@ -166,13 +220,111 @@ export default function Home() {
     }
   }
 
+  const [selectedItem, setSelectedItem] = useState(null)
+
+  const [ChatHistoryQueryResults, setChatHistoryQueryResults] = useState([])
+
   useEffect(() => {
 
     document.addEventListener("keydown", KeyboardListener)
 
     return () => {document.removeEventListener("keydown", KeyboardListener)}
-  }, [inputContent])
+  }, [inputContent, ChatHistoryModalIsOpen, selectedItem, ChatHistoryQueryResults])
+
   const prevScrollTop = useRef(0);
+
+  const [chatHistoryInputText, setChatHistoryInputText] = useState("")
+
+  function getGithubTimeDelta(unixTimestampSec) {
+        const seconds = Math.floor(Date.now() / 1000) - unixTimestampSec;
+
+        if (seconds < 60) {
+            return "just now";
+        } else if (seconds < 3600) {
+            const mins = Math.floor(seconds / 60);
+            return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+        } else if (seconds < 86400) {
+            const hours = Math.floor(seconds / 3600);
+            return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+        } else if (seconds < 604800) {
+            const days = Math.floor(seconds / 86400);
+            return `${days} day${days !== 1 ? 's' : ''} ago`;
+        } else if (seconds < 2592000) {
+            const weeks = Math.floor(seconds / 604800);
+            return `${weeks} week${weeks !== 1 ? 's' : ''} ago`;
+        } else if (seconds < 31536000) {
+            const months = Math.floor(seconds / 2592000);
+            return `${months} month${months !== 1 ? 's' : ''} ago`;
+        } else {
+            const years = Math.floor(seconds / 31536000);
+            return `${years} year${years !== 1 ? 's' : ''} ago`;
+        }
+  }
+
+  var commands = {
+    "New Chat - Creates a new chat": () => {
+        var id = generateUnsafeUUID()
+        router.push("/?id="+id)
+        setCurrentChat([])
+        setChatId(id)
+        ChatHistoryModalOnClose()
+        return
+    }
+  }
+
+  function GetResults(query) {
+    try {eval("localStorage")} catch {
+        return
+    }
+    var results = {}
+    for (let index = 0; index < localStorage.length; index++) {
+        const key = localStorage.key(index);
+        if (key.endsWith("date")) {
+            var chat = localStorage.getItem(key.split("date")[0])
+            if (!chat.toLocaleLowerCase().includes(query.toLocaleLowerCase().trim())) {
+                continue
+            }
+            chat = JSON.parse(chat)
+            var date = parseInt(localStorage.getItem(key))
+            results[date] = {"date": getGithubTimeDelta(date), "title": chat[0].parts[0].text, "chat": chat, "id": key.split("date")[0]}
+        }
+    }
+    
+    var sortedResults = Object.keys(results)
+        .sort((a, b) => b - a)
+        .map(key => results[key]);
+    
+    var filteredCommands = []
+
+    var commandsKeys = Object.keys(commands)
+
+    for (let index = 0; index < commandsKeys.length; index++) {
+        const element = commandsKeys[index];
+        if (element.toLocaleLowerCase().includes(query.toLocaleLowerCase())) {
+            filteredCommands.push({"date": "Command", "title": element, "id": ""})
+        }
+    }
+
+    return [...filteredCommands, ...sortedResults]
+  }
+
+  useEffect(() => {
+    if (ChatHistoryModalIsOpen) {
+        setChatHistoryQueryResults(GetResults(chatHistoryInputText))
+    }
+  }, [ChatHistoryModalIsOpen, chatHistoryInputText])
+  var queryInputCurrentWidth = ""
+
+  if (ChatHistoryModalIsOpen) {
+    try {
+        queryInputCurrentWidth = document.getElementById("queryInput").clientWidth + "px"
+    } catch {}
+  }
+
+  useEffect(() => {
+    setSelectedItem(null)
+  }, [chatHistoryInputText])
+
   return (
     <ClickSpark>
     <div style={{minHeight:"100vh", width:"100vw", backgroundColor:"#111", overflowY: "auto", color: "white"}} ref={chatboxRef} id="chatbox" onScroll={(e) => {
@@ -194,9 +346,9 @@ export default function Home() {
               <h1 className="text-4xl">What's on your mind today?</h1>
             </div>
             </> : ""}
-            {currentChat.map((item) => {
+            {currentChat.map((item, i) => {
               if (item.role == "user") {
-                return UserMessage(item.parts[0].text)
+                return UserMessage(item.parts[0].text, Number(i), setInputContent, currentChat, setCurrentChat)
               } else {
                 return ModelMessage(item.parts[0].text)
               }
@@ -253,7 +405,7 @@ export default function Home() {
         </div>
       </div>
     </div>
-    <Modal isOpen={isOpen} placement="top-center" onOpenChange={onOpenChange} hideCloseButton shouldCloseOnInteractOutside={false}
+    <Modal isOpen={isOpen} placement="top-center" onOpenChange={onOpenChange}
       backdrop="blur"
     >
       <ModalContent>
@@ -281,6 +433,40 @@ export default function Home() {
           </>
         )}
       </ModalContent>
+    </Modal>
+    <Modal isOpen={ChatHistoryModalIsOpen} placement="top" onOpenChange={ChatHistoryModalOnOpenChange} backdrop="blur" hideCloseButton>
+        <ModalContent style={{padding:"10px", maxWidth:"100vw", width: "fit-content"}}>
+            {
+                (onClose) => (
+                    <>
+                    <textarea id="queryInput" style={{padding: "14px", width:"60vw", fontSize: "20px", borderTopRightRadius: "10px", borderTopLeftRadius: "10px", border: ChatHistoryQueryResults.length == 0 ? "10px" : ""}} rows={1} autoFocus
+                        value={chatHistoryInputText}
+                        placeholder="Write your query here"
+                        onInput={(e) => {
+                            setChatHistoryInputText(e.target.value)
+                        }}
+                    ></textarea>
+                    {ChatHistoryQueryResults.map((x, i) =>
+                        <>
+                        <div id={"chatid_"+x.id} style={{width: queryInputCurrentWidth, backgroundColor: selectedItem == i ? "#222" : "#111", padding: "8px", borderBottomRightRadius: i == ChatHistoryQueryResults.length - 1 ? "10px" : "", borderBottomLeftRadius: i == ChatHistoryQueryResults.length - 1 ? "10px" : "", cursor: "pointer"}}
+                            onClick={(event) => {
+                                if (event.target.id == "") {
+                                    event.target = event.target.parentElement
+                                }
+                                router.push("/?id="+event.target.id.split("chatid_")[1])
+                                setChatId(event.target.id.split("chatid_")[1])
+                                ChatHistoryModalOnClose()
+                            }}
+                        >
+                            <h1 style={{overflow: "hidden", "whiteSpace": "nowrap", "textOverflow": "ellipsis", display: "block"}}>{x.title.replace(/\n/g, ' ')}</h1>
+                            <h2>{x.date}</h2>
+                        </div>
+                        </>
+                    )}
+                    </>
+                )
+            }
+        </ModalContent>
     </Modal>
     </ClickSpark>
   )

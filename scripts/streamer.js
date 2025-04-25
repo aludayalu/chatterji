@@ -34,7 +34,6 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
                 return part.match(/.{1,50}/g) || [''];
             });
     }
-    
     while (true) {
         if (window.localStorage.getItem("readerId")!=id) {
             reader.cancel("User stopped the action")
