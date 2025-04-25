@@ -174,7 +174,7 @@ export default function Home() {
   const prevScrollTop = useRef(0);
   return (
     <ClickSpark>
-    <div style={{minHeight:"100vh", width:"100vw", backgroundColor:"#111", overflowY: "auto"}} ref={chatboxRef} id="chatbox" onScroll={(e) => {
+    <div style={{minHeight:"100vh", width:"100vw", backgroundColor:"#111", overflowY: "auto", color: "white"}} ref={chatboxRef} id="chatbox" onScroll={(e) => {
       if (!isResponding) {
         return
       }
