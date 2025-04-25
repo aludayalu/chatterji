@@ -128,6 +128,7 @@ export default function Home() {
         if (selectedItem == null || selectedItem == 0) return;
         setSelectedItem(selectedItem - 1)
     }
+
     if (event.key == "ArrowDown") {
         if (selectedItem == null) {
             setSelectedItem(0)
@@ -138,6 +139,7 @@ export default function Home() {
         }
         setSelectedItem(selectedItem + 1)
     }
+
     if (event.key == "Enter") {
         try {event.preventDefault()} catch{}
 
@@ -157,6 +159,10 @@ export default function Home() {
         setChatId(ChatHistoryQueryResults[selectedItem].id)
         ChatHistoryModalOnClose()
         router.push("/?id="+ChatHistoryQueryResults[selectedItem].id)
+    }
+
+    if (event.key == "Tab") {
+        ChatHistoryModalOnClose()
     }
   }
 
