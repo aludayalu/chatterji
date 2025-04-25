@@ -49,4 +49,7 @@ textarea {
   .shiny-text.disabled {
     animation: none;
   }
-  
+
+pre {
+  margin-top: 14px !important;
+}

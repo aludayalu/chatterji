@@ -7,11 +7,13 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeSanitize from 'rehype-sanitize';
 import 'github-markdown-css'
+import ClickSpark from "../scripts/clickspark"
+import { useRouter } from "next/router";
 
 const MarkdownComponent = (content) => {
   return (
     <>
-    <div className="markdown-body" style={{marginBottom: "10px"}}>
+    <div className="markdown-body" style={{marginBottom: "14px"}}>
       <ReactMarkdown
         children={content}
         remarkPlugins={[remarkMath]}
@@ -32,7 +34,7 @@ const UserMessage = (content) => {
         padding: "8px",
         borderRadius: "5px",
         backgroundColor: "#1c1c1c",
-        marginBottom: "10px"
+        marginBottom: "14px"
       }}>
         {content}
       </div>
@@ -44,9 +46,10 @@ const UserMessage = (content) => {
 const ModelMessage = MarkdownComponent
 
 export default function Home() {
+  const router = useRouter();
   const [inputContent, setInputContent] = useState("")
   const [currentChat, setCurrentChat] = useState([])
-  const [chatId, setChatId] = useState(null)
+  var [chatId, setChatId] = useState(null)
   const {isOpen, onOpen, onOpenChange} = useDisclosure()
   var KeyStateDefault = ""
   try {
@@ -71,14 +74,58 @@ export default function Home() {
     }
   }, [currentChat, autoScroll]);
 
+  useEffect(() => {
+    setTimeout(() => {
+      document.querySelector("textarea").focus()
+    }, 10)
+  }, [])
+
+  useEffect(() => {
+    const id = router.query.id
+    if (id) {
+      var storageChat = window.localStorage.getItem(id)
+      if (storageChat) {
+        setChatId(id)
+        setCurrentChat(JSON.parse(storageChat))
+        const el = document.getElementById("chatbox");
+        const here = el.scrollTop;
+        el.scrollTo({ top: here, behavior: "instant" });
+      }
+    }
+  }, [router.query.id])
+
+  function generateUnsafeUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+      const r = Math.random() * 16 | 0
+      const v = c === 'x' ? r : (r & 0x3 | 0x8)
+      return v.toString(16)
+    })
+  }
+  
+  function HandleChat() {
+    if (chatId == null) {
+      var id = generateUnsafeUUID()
+      setChatId(id)
+      history.pushState({}, "", "/?id="+id)
+      return id
+    }
+    return chatId
+  }
+
   function KeyboardListener(event) {
     if (event.key === "Enter" && !event.shiftKey) {
-      if (window.localStorage.getItem("geminiAPIKey") == null) {
+      if (window.localStorage.getItem("geminiAPIKey") == null || inputContent == "") {
         onOpen()
         return
       }
 
-      setCurrentChat((currentChat) => [...currentChat, {role: "user", parts: [{ text: inputContent}]}, {role: "model", parts: [{ text: ""}]}])
+      chatId = HandleChat()
+
+      setCurrentChat((currentChat) => {
+        var newChat = [...currentChat, {role: "user", parts: [{ text: inputContent}]}, {role: "model", parts: [{ text: ""}]}]
+        window.localStorage.setItem(chatId, JSON.stringify(newChat))
+        return newChat
+      })
 
       setIsResponding(true)
 
@@ -95,6 +142,8 @@ export default function Home() {
           lastPart.text += x;
           lastMessage.parts = [lastPart];
           updatedChat[updatedChat.length - 1] = lastMessage;
+
+          window.localStorage.setItem(chatId, JSON.stringify(updatedChat))
         
           return updatedChat;
         });
@@ -107,6 +156,11 @@ export default function Home() {
     if (event.code === "Space" && event.altKey) {
       event.preventDefault();
     }
+
+    if (event.code == "Escape") {
+      localStorage.setItem("readerId", "")
+      setIsResponding(false)
+    }
   }
 
   useEffect(() => {
@@ -117,8 +171,8 @@ export default function Home() {
   }, [inputContent])
   const prevScrollTop = useRef(0);
   return (
-    <>
-    <div style={{minHeight:"100vh", width:"100vw", backgroundColor:"#111", overflowY: "auto"}} ref={chatboxRef} onScroll={(e) => {
+    <ClickSpark>
+    <div style={{minHeight:"100vh", width:"100vw", backgroundColor:"#111", overflowY: "auto"}} ref={chatboxRef} id="chatbox" onScroll={(e) => {
       if (!isResponding) {
         return
       }
@@ -132,6 +186,11 @@ export default function Home() {
       <div style={{height:"76vh", "width":"100%"}}>
         <div style={{height:"100%", width:"100%"}} className="flex justify-center items-center">
           <div style={{height:"100%", width:"60%", marginTop:"50px"}}>
+            {chatId == null ? <>
+            <div style={{height:"100%", width:"100%"}} className="flex justify-center items-center">
+              <h1 className="text-4xl">What's on your mind today?</h1>
+            </div>
+            </> : ""}
             {currentChat.map((item) => {
               if (item.role == "user") {
                 return UserMessage(item.parts[0].text)
@@ -163,6 +222,7 @@ export default function Home() {
               }}
               value={inputContent}
               placeholder="Write your message here"
+              autoFocus
             >
 
             </textarea>
@@ -219,6 +279,6 @@ export default function Home() {
         )}
       </ModalContent>
     </Modal>
-    </>
+    </ClickSpark>
   )
 }

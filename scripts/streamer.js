@@ -28,7 +28,7 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
 
     function splitByNewlineAndEveryN(str) {
         return str
-            .split(/(\n)/) // Split by newline and keep it as a token
+            .split(/(\n)/)
             .flatMap(part => {
                 if (part === '\n') return [part];
                 return part.match(/.{1,50}/g) || [''];
