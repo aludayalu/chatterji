@@ -25,13 +25,15 @@ const MarkdownComponent = (content) => {
   )
 }
 
-const UserMessage = (content, i, setInputContent, currentChat, setCurrentChat) => {
+const UserMessage = (content, i, setInputContent, currentChat, setCurrentChat, setIsResponding) => {
   return (
     <>
     <div style={{ display: "flex", justifyContent: "flex-end" }}>
       <Tooltip placement="bottom-end" showArrow content={(
         <>
         <h1 style={{cursor: "pointer"}} onClick={() => {
+            localStorage.setItem("readerId", "")
+            setIsResponding(false)
             setInputContent(content)
             setCurrentChat(currentChat.slice(0, i))
         }}>Edit</h1>
@@ -358,7 +360,7 @@ export default function Home() {
             </> : ""}
             {currentChat.map((item, i) => {
               if (item.role == "user") {
-                return UserMessage(item.parts[0].text, Number(i), setInputContent, currentChat, setCurrentChat)
+                return UserMessage(item.parts[0].text, Number(i), setInputContent, currentChat, setCurrentChat, setIsResponding)
               } else {
                 return ModelMessage(item.parts[0].text)
               }
