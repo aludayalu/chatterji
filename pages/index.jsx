@@ -74,10 +74,7 @@ export default function Home() {
 
         setIsResponding(true)
 
-        streamGeminiResponse([{
-          role: "user",
-          parts: [{ text: inputContent}]
-        }], (x) => {
+        streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x) => {
           setCurrentChat((prevChat) => {
             const updatedChat = [...prevChat];
             const lastMessage = { ...updatedChat[updatedChat.length - 1] };
