@@ -51,5 +51,11 @@ textarea {
   }
 
 pre {
+  color: white !important;
+  background-color: #1c1c1c !important;
   margin-top: 14px !important;
+}
+
+.markdown-body {
+  color: white !important;
 }

@@ -5,10 +5,11 @@ import { streamGeminiResponse } from "../scripts/streamer"
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import rehypeSanitize from 'rehype-sanitize';
 import 'github-markdown-css'
 import ClickSpark from "../scripts/clickspark"
 import { useRouter } from "next/router";
+import 'katex/dist/katex.min.css'
+
 
 const MarkdownComponent = (content) => {
   return (
@@ -17,7 +18,7 @@ const MarkdownComponent = (content) => {
       <ReactMarkdown
         children={content}
         remarkPlugins={[remarkMath]}
-        rehypePlugins={[rehypeKatex, rehypeSanitize]}
+        rehypePlugins={[rehypeKatex]}
       />
     </div>
     </>
