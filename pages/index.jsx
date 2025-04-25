@@ -213,7 +213,7 @@ export default function Home() {
       try {event.preventDefault()} catch{}
     }
 
-    if (event.code === "Space" && (event.altKey || event.shiftKey)) {
+    if (event.code == "Tab") {
         ChatHistoryModalOnOpen()
         event.preventDefault();
     }

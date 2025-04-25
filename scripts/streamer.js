@@ -50,7 +50,6 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
                 for (let index = 0; index < splittedText.length; index++) {
                     const element = splittedText[index];
                     if (window.localStorage.getItem("readerId")!=id) {
-                        console.log(window.localStorage.getItem("readerId"), id)
                         reader.cancel("User stopped the action")
                         return
                     }
