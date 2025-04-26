@@ -373,7 +373,7 @@ export default function Home() {
             {chatId == null ? <>
             <div style={{height:"100%", width:"100%"}} className="flex justify-center items-center">
               <div>
-                <h1 className="text-4xl mt-10">What's on your mind today?</h1>
+                <h1 className="text-4xl mt-10">Himadri Is not cool</h1>
                 <div className="flex justify-center items-center" style={{color: "#A1A1AA", marginTop: "14px"}}>
                     Press the Tab Key to open the Command Pallette
                 </div>
