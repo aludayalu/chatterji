@@ -473,7 +473,7 @@ export default function Home() {
             {
                 (onClose) => (
                     <>
-                    <textarea id="queryInput" style={{padding: "14px", width:"60vw", fontSize: "20px", borderTopRightRadius: "10px", borderTopLeftRadius: "10px", border: ChatHistoryQueryResults.length == 0 ? "10px" : ""}} rows={1} autoFocus
+                    <textarea id="queryInput" style={{padding: "14px", width:"60vw", fontSize: "20px", borderTopRightRadius: "10px", borderTopLeftRadius: "10px", borderBottomLeftRadius: ChatHistoryQueryResults.length == 0 ? "10px" : null, borderBottomRightRadius: ChatHistoryQueryResults.length == 0 ? "10px" : null}} rows={1} autoFocus
                         value={chatHistoryInputText}
                         placeholder="Write your query here"
                         onInput={(e) => {
