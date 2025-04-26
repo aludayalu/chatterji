@@ -404,7 +404,7 @@ export default function Home() {
       <div style={{height:"24vh", "width":"100%", position: "fixed"}} className="flex justify-center items-center">
         <div className="flex flex-col" style={{height:"100%", width:"50%", border:"1px solid rgba(255, 255, 255, 0.14)", borderBottom: "none", borderTopLeftRadius:"14px", borderTopRightRadius:"14px", background:"#1c1c1c"}}>
           <div style={{height:"auto", padding:"8px"}} className="flex-1">
-            <textarea style={{height:"90%", width:"97.5%", border:"none", padding:"5px", backgroundColor: "#1c1c1c", borderRadius:"14px"}}
+            <textarea style={{height:"90%", width:"97.5%", border:"none", padding:"5px", backgroundColor: "#1c1c1c"}}
               onInput={(x) => {
                 setInputContent(x.target.value)
               }}
