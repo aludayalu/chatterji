@@ -36,6 +36,7 @@ const UserMessage = (content, i, setInputContent, currentChat, setCurrentChat, s
             setIsResponding(false)
             setInputContent(content)
             setCurrentChat(currentChat.slice(0, i))
+            document.querySelector("textarea").focus()
         }}>Edit</h1>
         </>
       )}>
