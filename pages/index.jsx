@@ -128,15 +128,11 @@ export default function Home() {
 
   function ChatHistoryKeyboardHandler(event) {
     if (event.key == "ArrowUp") {
-        if (selectedItem == null || selectedItem == 0) return;
+        if (selectedItem == 0) return;
         setSelectedItem(selectedItem - 1)
     }
 
     if (event.key == "ArrowDown") {
-        if (selectedItem == null) {
-            setSelectedItem(0)
-            return
-        }
         if (selectedItem == ChatHistoryQueryResults.length - 1) {
             return
         }
@@ -146,11 +142,11 @@ export default function Home() {
     if (event.key == "Enter") {
         try {event.preventDefault()} catch{}
 
-        if (selectedItem == null) {
+        if (ChatHistoryQueryResults.length == 0) {
             return;
         }
 
-        setSelectedItem(null)
+        setSelectedItem(0)
         setChatHistoryInputText("")
 
         if (ChatHistoryQueryResults[selectedItem].date == "Command") {
@@ -161,6 +157,7 @@ export default function Home() {
         localStorage.setItem("readerId", "")
         setChatId(ChatHistoryQueryResults[selectedItem].id)
         ChatHistoryModalOnClose()
+        setIsResponding(false)
         router.push("/?id="+ChatHistoryQueryResults[selectedItem].id)
     }
 
@@ -241,7 +238,7 @@ export default function Home() {
     }
   }
 
-  var [selectedItem, setSelectedItem] = useState(null)
+  var [selectedItem, setSelectedItem] = useState(0)
 
   const [ChatHistoryQueryResults, setChatHistoryQueryResults] = useState([])
 
@@ -287,7 +284,11 @@ export default function Home() {
     setChatId(null)
     ChatHistoryModalOnClose()
     localStorage.setItem("readerId", "")
+    setIsResponding(false)
     router.push("/")
+    setTimeout(() => {
+      document.querySelector("textarea").focus()
+    }, 10)
     return
   }
 
@@ -350,7 +351,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    setSelectedItem(null)
+    setSelectedItem(0)
   }, [chatHistoryInputText])
 
   return (
