@@ -360,7 +360,7 @@ export default function Home() {
         return
       }
       const curr = e.target.scrollTop;
-      if (curr < prevScrollTop.current) {
+      if (curr + 10 < prevScrollTop.current) {
         console.log("scrolled up")
         setAutoScroll(false);
       }
