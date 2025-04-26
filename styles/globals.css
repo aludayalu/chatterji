@@ -59,3 +59,7 @@ pre {
 .markdown-body {
   color: white !important;
 }
+
+li {
+    margin-bottom: 20px;
+}
