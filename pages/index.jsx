@@ -173,6 +173,7 @@ export default function Home() {
         ChatHistoryKeyboardHandler(event)
         return
     }
+
     if (event.key === "Enter" && !event.shiftKey) {
       if (window.localStorage.getItem("geminiAPIKey") == null || inputContent == "") {
         onOpen()
@@ -229,6 +230,13 @@ export default function Home() {
     if (event.code == "Escape") {
       localStorage.setItem("readerId", "")
       setIsResponding(false)
+    }
+
+    if (event.key == "/") {
+        if (document.activeElement != document.querySelector("textarea")) {
+            event.preventDefault()
+            document.querySelector("textarea").focus()
+        }
     }
   }
 
