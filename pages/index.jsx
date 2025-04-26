@@ -1,5 +1,5 @@
 import { Button, Modal, useDisclosure, ModalContent, ModalHeader, ModalBody, Input, ModalFooter, Checkbox, Tooltip } from "@heroui/react";
-import { CircleStop, CircleArrowUp, ArrowDown } from "lucide-react"
+import { CircleStop, CircleArrowUp, ArrowDown, ArrowRightToLine } from "lucide-react"
 import { useEffect, useState, useRef } from "react";
 import { streamGeminiResponse } from "../scripts/streamer"
 import ReactMarkdown from 'react-markdown';
@@ -370,7 +370,12 @@ export default function Home() {
           <div style={{height:"100%", width:"60%", marginTop:"50px"}}>
             {chatId == null ? <>
             <div style={{height:"100%", width:"100%"}} className="flex justify-center items-center">
-              <h1 className="text-4xl">What's on your mind today?</h1>
+              <div>
+                <h1 className="text-4xl mt-10">What's on your mind today?</h1>
+                <div className="flex justify-center items-center" style={{color: "#A1A1AA", marginTop: "14px"}}>
+                    Press the Tab Key to open the Command Pallette
+                </div>
+              </div>
             </div>
             </> : ""}
             {currentChat.map((item, i) => {
