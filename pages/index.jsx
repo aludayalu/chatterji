@@ -281,14 +281,21 @@ export default function Home() {
         }
   }
 
+  function NewChat() {
+    setCurrentChat([])
+    setChatId(null)
+    ChatHistoryModalOnClose()
+    localStorage.setItem("readerId", "")
+    router.push("/")
+    return
+  }
+
   var commands = {
-    "New Chat - Creates a new chat": () => {
-        setCurrentChat([])
-        setChatId(null)
-        ChatHistoryModalOnClose()
-        localStorage.setItem("readerId", "")
-        router.push("/")
-        return
+    "New Chat - Creates a new chat": NewChat,
+    "Delete Chat - Deletes the current chat": () => {
+        localStorage.removeItem(chatId+"date")
+        localStorage.removeItem(chatId)
+        NewChat()
     }
   }
 
