@@ -468,6 +468,18 @@ export default function Home() {
                                 selectedItem = Number(event.target.id.split("selection_")[1])
                                 ChatHistoryKeyboardHandler({"key": "Enter"})
                             }}
+                            onMouseEnter={(e) => {
+                                if (e.target.id == "") {
+                                    e.target = e.target.parentElement
+                                }
+                                e.target.style.backgroundColor = "#222"
+                            }}
+                            onMouseLeave={(e) => {
+                                if (e.target.id == "") {
+                                    e.target = e.target.parentElement
+                                }
+                                e.target.style.backgroundColor = selectedItem == i ? "#222" : "#111"
+                            }}
                         >
                             <h1 style={{overflow: "hidden", "whiteSpace": "nowrap", "textOverflow": "ellipsis", display: "block"}}>{x.title.replace(/\n/g, ' ')}</h1>
                             <h2>{x.date}</h2>
