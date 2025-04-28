@@ -1,22 +1,12 @@
-const endpoint = "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent?alt=sse&key="
-
-export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
+export async function streamGeminiResponse(message, onUpdate, onEnd) {
+    message = message[message.length - 1].parts[0].text
     var id=Math.random().toString()
     window.localStorage.setItem("readerId", id)
-    const response = await fetch(endpoint.replace("{model}", localStorage.getItem("usingPro") == "true" ? "gemini-2.5-pro-exp-03-25" : "gemini-2.5-flash-preview-04-17") + window.localStorage.getItem("geminiAPIKey"), {
-        method: "POST",
+    const response = await fetch("http://127.0.0.1:5000/?data="+message, {
+        method: "GET",
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-            contents: conversation,
-            generationConfig: {
-                temperature: 0.7,
-                thinkingConfig: {
-                    thinkingBudget: 10240
-                }
-            }
-        })
     });
     
     if (!response.body) {
@@ -39,23 +29,11 @@ export async function streamGeminiResponse(conversation, onUpdate, onEnd) {
         if (done) break;
     
         const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split('\n').filter(line => line.trim().startsWith('data: '));
+        const lines = chunk.split('\n\n').filter(line => line.trim().startsWith('data: '));
     
         for (const line of lines) {
-            const json = JSON.parse(line.replace(/^data: /, ''));
-            const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-
-            if (text) {
-                var splittedText = splitByNewlineAndEveryN(text)
-                for (let index = 0; index < splittedText.length; index++) {
-                    const element = splittedText[index];
-                    if (window.localStorage.getItem("readerId")!=id) {
-                        reader.cancel("User stopped the action")
-                        return
-                    }
-                    onUpdate(element, Number(id))
-                }
-            }
+            const text = String(line.split("data: ")[1]);
+            onUpdate(text, id)
         }
     }
     onEnd()

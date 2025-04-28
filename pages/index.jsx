@@ -29,28 +29,16 @@ const UserMessage = (content, i, setInputContent, currentChat, setCurrentChat, s
   return (
     <>
     <div style={{ display: "flex", justifyContent: "flex-end" }}>
-      <Tooltip placement="bottom-end" showArrow content={(
-        <>
-        <h1 style={{cursor: "pointer"}} onClick={() => {
-            localStorage.setItem("readerId", "")
-            setIsResponding(false)
-            setInputContent(content)
-            setCurrentChat(currentChat.slice(0, i))
-            document.querySelector("textarea").focus()
-        }}>Edit</h1>
-        </>
-      )}>
-        <div style={{
-            width: "fit-content",
-            border: "1px solid rgba(255, 255, 255, 0.14)",
-            padding: "8px",
-            borderRadius: "5px",
-            backgroundColor: "#1c1c1c",
-            marginBottom: "14px"
-        }}>
-            {content}
-        </div>
-      </Tooltip>
+      <div style={{
+          width: "fit-content",
+          border: "1px solid rgba(255, 255, 255, 0.14)",
+          padding: "8px",
+          borderRadius: "5px",
+          backgroundColor: "#1c1c1c",
+          marginBottom: "14px"
+      }}>
+          {content}
+      </div>
     </div>
     </>
   )
@@ -196,6 +184,9 @@ export default function Home() {
       setInputContent("")
 
       streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x, id) => {
+        x = JSON.parse(x)
+        if (x.type != "output") return;
+        x =  x.data + "\n\n"
         setCurrentChat((prevChat) => {
           if (window.localStorage.getItem("readerId")!=id) {
             return prevChat
@@ -293,8 +284,7 @@ export default function Home() {
   }
 
   var commands = {
-    "New Chat - Creates a new chat": NewChat,
-    "Delete Chat - Deletes the current chat": () => {
+    "New Chat - Deletes the current chat": () => {
         localStorage.removeItem(chatId+"date")
         localStorage.removeItem(chatId)
         NewChat()
@@ -334,7 +324,7 @@ export default function Home() {
         }
     }
 
-    return [...filteredCommands, ...sortedResults]
+    return [...filteredCommands]
   }
 
   useEffect(() => {
@@ -373,8 +363,8 @@ export default function Home() {
             {chatId == null ? <>
             <div style={{height:"100%", width:"100%"}} className="flex justify-center items-center">
               <div>
-                <h1 className="text-4xl mt-10">Himadri Is soo cool</h1>
-                <div className="flex justify-center items-center" style={{color: "#A1A1AA", marginTop: "14px"}}>
+                <h1 className="text-4xl mt-10 text-center">Yeti Buddy Your Companion</h1>
+                <div className="flex justify-center items-center text-center" style={{color: "#A1A1AA", marginTop: "14px"}}>
                     Press the Tab Key to open the Command Pallette
                 </div>
               </div>
@@ -387,7 +377,7 @@ export default function Home() {
                 return ModelMessage(item.parts[0].text)
               }
             })}
-            {isResponding && currentChat[currentChat.length - 1].parts[0].text.length == 0 && <p className="shiny-text">Gemini is thinking!</p>}
+            {isResponding && <p className="shiny-text">Yeti is working!</p>}
             <div style={{height:"28vh"}}></div>
           </div>
         </div>
@@ -415,26 +405,6 @@ export default function Home() {
             >
 
             </textarea>
-          </div>
-          <div style={{height:"auto"}}>
-            <div style={{float:"right", marginRight:"10px", marginBottom:"10px", cursor: "pointer"}} className="flex justify-center items-center"
-              onClick={() => {
-                if (isResponding) {
-                  localStorage.setItem("readerId", "")
-                  setIsResponding(false)
-                } else {
-                  KeyboardListener({"key": "Enter", "shiftKey": false})
-                }
-              }}
-            >
-              <Button variant="faded" size="sm" style={{marginRight:"10px"}} onPress={onOpen}>Change API Key</Button>
-              {
-                !isResponding && <CircleArrowUp opacity={inputContent.length == 0 ? 0.2 : 1} size={28} />
-              }
-              {
-                isResponding && <CircleStop size={28}></CircleStop>
-              }
-            </div>
           </div>
         </div>
       </div>
