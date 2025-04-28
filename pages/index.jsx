@@ -108,7 +108,6 @@ export default function Home() {
     if (chatId == null) {
       var id = generateUnsafeUUID()
       setChatId(id)
-      history.pushState({}, "", "/?id="+id)
       return id
     }
     return chatId

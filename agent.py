@@ -39,9 +39,8 @@ def input(x):
             input_requested = False
             stop_stream = False
             return input_value
-a=print
+
 def print(x):
-    a(x)
     output.append(x)
 
 @app.route("/", methods=["GET"])
@@ -59,7 +58,6 @@ def send_query():
         while True:
             if len(output) > last_length:
                 for x in output[last_length:]:
-                    a("outputting")
                     yield f"data: {json.dumps({'type': 'output', 'data': x})}\n\n".encode()
                 last_length = len(output)
             
@@ -245,7 +243,8 @@ def create_prompt_file():
     """Create the prompt.txt file if it doesn't exist"""
     if not os.path.exists("prompt.txt"):
         with open("prompt.txt", "w") as f:
-            f.write("""You are a fully autonomous AI agent with direct access to the command line. Your primary goal is to INDEPENDENTLY complete tasks from start to finish with minimal user intervention.
+            f.write("""
+You are a fully autonomous AI agent with direct access to the command line. Your primary goal is to INDEPENDENTLY complete tasks from start to finish with minimal user intervention.
 
 ### RESPONSE FORMAT (CRITICAL):
 You MUST ALWAYS respond with valid, properly formatted JSON like this:
@@ -282,6 +281,37 @@ Start EVERY task with these commands:
   ]
 }
 ```
+
+### DIRECTORY NAVIGATION (CRITICAL):
+IMPORTANT: Each command runs independently from the root workspace directory. Directory changes (cd) DO NOT persist between commands!
+
+INCORRECT (WILL FAIL):
+```json
+{
+  "commands": [
+    "cd project_dir", 
+    "ls"  // This will NOT list files in project_dir!
+  ]
+}
+```
+
+CORRECT (USE THESE PATTERNS):
+```json
+{
+  "commands": [
+    "ls project_dir",  // Access directory without changing into it
+    "cd project_dir && ls",  // Combine cd with command using &&
+    "(cd project_dir && npm install)"  // Use subshell with parentheses for complex commands
+  ]
+}
+```
+
+Examples:
+- To run multiple commands in a directory: `(cd project_dir && npm init -y && npm install express)`
+- To verify file creation in a directory: `cd project_dir && cat << 'EOF' > config.js\nmodule.exports = {}\nEOF && cat config.js`
+- For file operations in subdirectories: `mkdir -p project_dir/src && cd project_dir/src && touch index.js`
+
+ALWAYS include the directory path with EVERY command or chain commands with && after a cd command!
 
 ALWAYS verify operations with follow-up commands:
 ```json
@@ -340,6 +370,7 @@ def main():
     create_prompt_file()
     
     # Configure model with reduced max_output_tokens to avoid truncation issues
+    
     model = genai.GenerativeModel(
         model_name="gemini-2.5-flash-preview-04-17",
         generation_config={
