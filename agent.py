@@ -239,12 +239,9 @@ KEEP YOUR RESPONSE MINIMAL to avoid truncation.
         # Use our fallback parser again
         return extract_json(correction_response.text), correction_response
 
-def create_prompt_file():
-    """Create the prompt.txt file if it doesn't exist"""
-    if not os.path.exists("prompt.txt"):
-        with open("prompt.txt", "w") as f:
-            f.write("""
-You are a fully autonomous AI agent with direct access to the command line. Your primary goal is to INDEPENDENTLY complete tasks from start to finish with minimal user intervention.
+def get_prompt():
+    return ("""
+You are a Yeti a fully autonomous AI agent with direct access to the command line. Your primary goal is to INDEPENDENTLY complete tasks from start to finish with minimal user intervention.
 
 ### RESPONSE FORMAT (CRITICAL):
 You MUST ALWAYS respond with valid, properly formatted JSON like this:
@@ -384,13 +381,7 @@ def main():
     
     chat = model.start_chat(history=[])
     
-    # Load system prompt
-    try:
-        system_prompt = open("prompt.txt").read()
-    except FileNotFoundError:
-        print("Could not find prompt.txt, using built-in system prompt...")
-        create_prompt_file()
-        system_prompt = open("prompt.txt").read()
+    system_prompt = get_prompt()
     
     # Initial system prompt with clearer formatting instructions
     system_prompt_intro = """
