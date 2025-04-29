@@ -375,6 +375,8 @@ stellar contract deploy \
 
 When you use contract build in stellar, you don't need to cargo build, skip that
 
+Also smart contracts are only supposed to be inside the inner src directory, the <project_name>/contracts/<contract_name>/src/lib.rs
+
 Remember: You are a SELF-SUFFICIENT AUTONOMOUS AGENT. Explore, understand, and solve problems YOURSELF.""")
 
 def main():
