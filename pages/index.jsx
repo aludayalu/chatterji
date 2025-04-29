@@ -47,8 +47,11 @@ const UserMessage = (content, i, setInputContent, currentChat, setCurrentChat, s
 const ModelMessage = MarkdownComponent
 
 export default function Home() {
+  var host = "http://127.0.0.1"
   const router = useRouter();
   const [inputContent, setInputContent] = useState("")
+  const [serverURL, setServerURL] = useState("")
+  const [codeServerURL, setCodeServerURL] = useState("")
   const [currentChat, setCurrentChat] = useState([])
   var [chatId, setChatId] = useState(null)
   const {isOpen, onOpen, onOpenChange} = useDisclosure()
@@ -95,6 +98,14 @@ export default function Home() {
       }
     }
   }, [router.query.id])
+
+  useEffect(() => {
+    (async () => {
+      var data = await (await fetch(host+":5000/")).json()
+      setServerURL(host+":"+data.port)
+      setCodeServerURL(host+":"+"8080/?folder="+data.location)
+    })()
+  }, [])
 
   function generateUnsafeUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -182,7 +193,7 @@ export default function Home() {
 
       setInputContent("")
 
-      streamGeminiResponse([...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x, id) => {
+      streamGeminiResponse(serverURL, [...currentChat, {role: "user", parts: [{ text: inputContent}]}], (x, id) => {
         x = JSON.parse(x)
         if (x.type != "output") return;
         x =  x.data + "\n\n"
@@ -287,6 +298,9 @@ export default function Home() {
         localStorage.removeItem(chatId+"date")
         localStorage.removeItem(chatId)
         NewChat()
+    },
+    "Open VS Code": () => {
+      onOpen()
     }
   }
 
@@ -342,6 +356,21 @@ export default function Home() {
   useEffect(() => {
     setSelectedItem(0)
   }, [chatHistoryInputText])
+
+  const [mountedIframe] = useState(() => {
+    try {
+      eval("document")
+    } catch{return ""}
+    const el = eval("document").createElement("iframe");
+    el.src = codeServerURL;
+    el.style.width = "100%";
+    el.style.height = "100%";
+    return el;
+  });
+
+  useEffect(() => {
+    mountedIframe.src = codeServerURL;
+  }, [codeServerURL]);
 
   return (
     <ClickSpark>
@@ -402,41 +431,52 @@ export default function Home() {
               placeholder="Write your message here"
               autoFocus
             >
-
             </textarea>
+          </div>
+          <div style={{height:"auto"}}>
+            <div style={{float:"right", marginRight:"10px", marginBottom:"10px", cursor: "pointer"}} className="flex justify-center items-center">
+              <Button variant="faded" size="sm" style={{marginRight:"10px"}} onPress={() => {
+                onOpen()
+              }}>Open VS Code</Button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <Modal isOpen={isOpen} placement="top-center" onOpenChange={onOpenChange}
-      backdrop="blur"
-    >
-      <ModalContent>
-        {(onClose) => (
-          <>
-          <ModalHeader className="flex flex-col gap-1">Enter Gemini API Key</ModalHeader>
-          <ModalBody>
-            <Input label="API Key" placeholder="Enter your Google Gemini API Key" autoFocus id="api-key" value={modalAPIKeyValue} onInput={(x) => {setModalAPIKeyValue(x.target.value)}} type="password"/>
-            <Checkbox id="usingPro" defaultSelected={usingPro}>Pro</Checkbox>
-            <p className="text-sm" style={{color: "#A1A1AA", paddingLeft:"2px"}}>The API Key is stored locally in your browser.</p>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="danger" variant="flat" onPress={onClose}>
-              Close
-            </Button>
-            <Button color="primary" onPress={() => {
-              window.localStorage.setItem("geminiAPIKey", modalAPIKeyValue)
-              window.localStorage.setItem("usingPro", document.getElementById("usingPro").children[0].checked.toString())
-              setIsUsingPro(document.getElementById("usingPro").children[0].checked)
-              onClose()
-            }}>
-              Authenticate
-            </Button>
-          </ModalFooter>
-          </>
-        )}
-      </ModalContent>
-    </Modal>
+    <div
+        style={{
+          display: isOpen ? "block" : "none",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: "100vw",
+          height: "100vh",
+          backdropFilter: "blur(8px)",
+          zIndex: 10
+        }}
+        onClick={() => onOpenChange(false)}
+      />
+
+      <div
+        style={{
+          display: isOpen ? "block" : "none",
+          position: "fixed",
+          top: "10vh",
+          left: "10vw",
+          width: "80vw",
+          height: "80vh",
+          zIndex: 20,
+          background: "#1c1c1c",
+          borderRadius: "8px",
+          overflow: "hidden"
+        }}
+      >
+        <div style={{ width: "100%", height: "100%" }} ref={node => {
+          if (node && !node.contains(mountedIframe)) {
+            node.appendChild(mountedIframe);
+          }
+        }} />
+      </div>
     <Modal isOpen={ChatHistoryModalIsOpen} placement="top" onOpenChange={ChatHistoryModalOnOpenChange} backdrop="blur" hideCloseButton>
         <ModalContent style={{padding:"10px", maxWidth:"100vw", width: "fit-content"}}>
             {

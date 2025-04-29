@@ -1,8 +1,8 @@
-export async function streamGeminiResponse(message, onUpdate, onEnd) {
+export async function streamGeminiResponse(endpoint, message, onUpdate, onEnd) {
     message = message[message.length - 1].parts[0].text
     var id=Math.random().toString()
     window.localStorage.setItem("readerId", id)
-    const response = await fetch("http://127.0.0.1:5000/?data="+message, {
+    const response = await fetch(endpoint+"/?data="+message, {
         method: "GET",
         headers: {
             "Content-Type": "application/json"
