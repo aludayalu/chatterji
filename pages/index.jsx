@@ -171,7 +171,7 @@ export default function Home() {
     }
 
     if (event.key === "Enter" && !event.shiftKey) {
-      if (window.localStorage.getItem("geminiAPIKey") == null || inputContent == "") {
+      if (inputContent == "") {
         onOpen()
         return
       }
@@ -294,13 +294,13 @@ export default function Home() {
   }
 
   var commands = {
+    "Open VS Code": () => {
+      onOpen()
+    },
     "New Chat - Deletes the current chat": () => {
         localStorage.removeItem(chatId+"date")
         localStorage.removeItem(chatId)
         NewChat()
-    },
-    "Open VS Code": () => {
-      onOpen()
     }
   }
 
@@ -391,7 +391,7 @@ export default function Home() {
             {chatId == null ? <>
             <div style={{height:"100%", width:"100%"}} className="flex justify-center items-center">
               <div>
-                <h1 className="text-4xl mt-10 text-center">Yeti Buddy Your Companion</h1>
+                <h1 className="text-4xl mt-10 text-center">What's on your mind today?</h1>
                 <div className="flex justify-center items-center text-center" style={{color: "#A1A1AA", marginTop: "14px"}}>
                     Press the Tab Key to open the Command Pallette
                 </div>

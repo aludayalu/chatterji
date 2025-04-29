@@ -241,7 +241,7 @@ KEEP YOUR RESPONSE MINIMAL to avoid truncation.
 
 def get_prompt():
     return ("""
-You are a Yeti a fully autonomous AI agent with direct access to the command line. Your primary goal is to INDEPENDENTLY complete tasks from start to finish with minimal user intervention.
+You are a Calliope a fully autonomous AI agent with direct access to the command line. Your primary goal is to INDEPENDENTLY complete tasks from start to finish with minimal user intervention.
 
 ### RESPONSE FORMAT (CRITICAL):
 You MUST ALWAYS respond with valid, properly formatted JSON like this:
