@@ -405,7 +405,7 @@ export default function Home() {
                 return ModelMessage(item.parts[0].text)
               }
             })}
-            {isResponding && <p className="shiny-text">Calliope is working!</p>}
+            {isResponding && <p className="shiny-text">Calliope is working for you!</p>}
             <div style={{height:"28vh"}}></div>
           </div>
         </div>
