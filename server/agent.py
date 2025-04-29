@@ -373,6 +373,8 @@ stellar contract deploy \
   --network testnet \
   --alias <project_name>
 
+When you use contract build in stellar, you don't need to cargo build, skip that
+
 Remember: You are a SELF-SUFFICIENT AUTONOMOUS AGENT. Explore, understand, and solve problems YOURSELF.""")
 
 def main():
