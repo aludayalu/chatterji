@@ -79,7 +79,7 @@ def send_query():
     return response
 
 def execute_command(cmd: str) -> str:
-    print(f"Agent is executing command ```{cmd}```")
+    print(f"Agent is executing command ```{cmd.replace("`", "'")}```")
     try:
         output = subprocess.run(cmd, shell=True, text=True, 
                                 capture_output=True, timeout=300)
@@ -390,7 +390,7 @@ def main():
             "temperature": 0.2,
             "top_p": 0.95,
             "top_k": 40,
-            "max_output_tokens": 8192,  # Reduced to avoid truncation
+            "max_output_tokens": 30720,  # Reduced to avoid truncation
             "response_mime_type": "application/json",
         }
     )
@@ -467,7 +467,7 @@ REMEMBER: Keep your response VERY BRIEF to avoid truncation.
                                 cmd = cmd[1:-1]
                                 
                             cmd_output = execute_command(cmd)
-                            print(f"CLI Output: ```{cmd_output[:1000]}...```")
+                            print(f"CLI Output: ```{cmd_output[:1000].replace("`", "'")}```")
                             all_outputs.append(f"Command: {cmd}\nOutput: {cmd_output}")
                         
                         # Limit the amount of output sent back to the model to avoid context overflow
