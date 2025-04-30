@@ -41,7 +41,7 @@ def input(x):
             return input_value
 
 def print(x):
-    output.append(x)
+    output.append(x.replace("`", "'"))
 
 @app.route("/", methods=["GET"])
 def send_query():
@@ -385,7 +385,7 @@ def main():
     # Configure model with reduced max_output_tokens to avoid truncation issues
     
     model = genai.GenerativeModel(
-        model_name="gemini-2.0-flash",
+        model_name="gemini-2.5-flash-preview-04-17",
         generation_config={
             "temperature": 0.2,
             "top_p": 0.95,
